@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/texto_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Esta app fue desarrollada para detectar y contar tipos de esporas usando visión por computadora."
+        android:textSize="18sp"/>
+</LinearLayout>
