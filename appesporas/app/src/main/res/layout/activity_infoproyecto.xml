@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF000000"> <LinearLayout
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"> <TextView
+    android:id="@+id/texto_titulo_app"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="20dp"
+    android:textAlignment="center"
+    android:text="¡Bienvenido a la App de Análisis de Esporas!"
+    android:textColor="#FFFFFFFF"
+    android:textSize="22sp"
+    android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/texto_introduccion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:text="Esta app fue desarrollada con el objetivo de **detectar y contar tipos de esporas** de manera eficiente, empleando técnicas avanzadas de **visión por computadora**."
+        android:textColor="#FFFFFFFF"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/texto_funcionalidad_general_titulo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="¿Cómo funciona?"
+        android:textColor="#FFFFFFFF"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/texto_funcionalidad_general_desc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:text="En esta sección, podrás seleccionar una imagen directamente desde tu galería. Nuestro sistema la analizará minuciosamente para identificar y contar las esporas presentes. El tipo de análisis que se realizará dependerá de la **opción que elijas**."
+        android:textColor="#FFFFFFFF"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/texto_hongo_titulo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="Modo por Tipo de Hongo (Hongo 1 a 4)"
+        android:textColor="#FFFFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/texto_hongo_desc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:text="Si seleccionas un tipo de hongo específico (del 1 al 4), el sistema realizará un **análisis completo de la imagen**, detectando y mostrando el número total de esporas en toda su extensión. Para asegurar la precisión, se aplican herramientas de preprocesamiento, ajustes de imagen y filtros inteligentes que identifican las esporas basándose en su **tamaño, forma redondeada y solidez**."
+        android:textColor="#FFFFFFFF"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/texto_cuadro_titulo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="Modo Conteo y Medición por Cuadro"
+        android:textColor="#FFFFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/texto_cuadro_desc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:text="Al optar por el apartado de 'Conteo y Medición por Cuadro', tu imagen será estratégicamente **dividida en una cuadrícula de 25 secciones**. El sistema calculará el conteo de esporas en cada uno de estos cuadros y determinará su **área promedio en milímetros cuadrados** (aprovechando las dimensiones predefinidas de la cuadrícula). Además, se te proporcionará un **margen de error del 10%** y una **estimación ajustada** para una comprensión más completa de la cantidad real de esporas."
+        android:textColor="#FFFFFFFF"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/texto_resultado_final_titulo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="Visualización de Resultados"
+        android:textColor="#FFFFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/texto_resultado_final_desc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:text="Independientemente del modo de análisis elegido, el resultado siempre se mostrará de forma clara: verás tu imagen con las esporas detectadas **marcadas visualmente** y el **conteo total o específico** correspondiente."
+        android:textColor="#FFFFFFFF"
+        android:textSize="16sp" />
+
+</LinearLayout>
+</ScrollView>

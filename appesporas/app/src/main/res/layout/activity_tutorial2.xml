@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tutorial2_root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".tutorial2">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <ImageView
+                android:id="@+id/imageViewPaso2_1"
+                android:layout_width="wrap_content"
+                android:layout_height="452dp"
+                android:layout_marginBottom="8dp"
+                android:contentDescription="@string/imagen_del_primer_paso_del_tutorial_2"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/primerpaso" />
+            <TextView
+                android:id="@+id/textViewDescripcionPaso2_1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/esta_funcion_tambien_necesitara_que_eligas_una_imagen_en_tu_galeria_pero_a_su_vez_pulsaras_el_boton_analizar_esporas"
+                android:textSize="16sp"
+                android:textAlignment="center"
+                android:layout_marginBottom="24dp" />
+
+            <ImageView
+                android:id="@+id/imageViewPaso2_2"
+                android:layout_width="wrap_content"
+                android:layout_height="600dp"
+                android:layout_marginBottom="8dp"
+                android:contentDescription="@string/imagen_del_segundo_paso_del_tutorial_2"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/segundopaso" />
+            <TextView
+                android:id="@+id/textViewDescripcionPaso2_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/observa_el_n_mero_de_esporas_detectadas_y_c_mo_se_resaltan_en_la_imagen_ademas_de_que_esta_funcion_agregara_nuevos_datos_a_tu_disposici_n"
+                android:textSize="16sp"
+                android:textAlignment="center"
+                android:layout_marginBottom="24dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/buttonTutorial2Atras"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/atras"
+                    android:layout_marginEnd="16dp"
+                    tools:ignore="ButtonStyle" />
+
+                <Button
+                    android:id="@+id/buttonTutorial2Finalizar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/finalizar"
+                    tools:ignore="ButtonStyle" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -21,35 +21,37 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
+
             <ImageView
-            android:id="@+id/imageViewPaso1"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:scaleType="centerCrop"
-            android:layout_marginBottom="8dp"
-            app:srcCompat="@drawable/primer_paso" />
+                android:id="@+id/imageViewPaso1"
+                android:layout_width="wrap_content"
+                android:layout_height="396dp"
+                android:layout_marginBottom="8dp"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/primer_paso" />
+
             <TextView
-            android:id="@+id/textViewDescripcionPaso1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Este es el primer paso de tu tutorial. Aquí puedes explicar algo importante con texto descriptivo y claro."
-            android:textSize="16sp"
-            android:textAlignment="center"
-            android:layout_marginBottom="24dp" />
+                android:id="@+id/textViewDescripcionPaso1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Este es el primer paso de tu tutorial. Aquí deberás seleccionar el módulo que deseas, teniendo en cuenta que las primeras cuatro opciones son para un análisis total y la última es el conteo en un área específica de 5x5."
+                android:textSize="16sp"
+                android:textAlignment="center"
+                android:layout_marginBottom="24dp" />
 
             <ImageView
                 android:id="@+id/imageViewPaso2"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:scaleType="centerCrop"
+                android:layout_width="wrap_content"
+                android:layout_height="430dp"
                 android:layout_marginBottom="8dp"
+                android:scaleType="centerCrop"
                 app:srcCompat="@drawable/segundo_paso" />
 
             <TextView
                 android:id="@+id/textViewDescripcionPaso2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Y aquí el segundo paso. Puedes usar otra imagen para ilustrar lo que los usuarios deben hacer a continuación."
+                android:text="Y aquí el segundo paso: solo tendrás que pulsar el botón para abrir tu galería."
                 android:textSize="16sp"
                 android:textAlignment="center"
                 android:layout_marginBottom="24dp" />
@@ -60,11 +62,12 @@
                 android:layout_height="200dp"
                 android:scaleType="centerCrop"
                 android:layout_marginBottom="8dp"
-                app:srcCompat="@drawable/tercer_paso" /> <TextView
+                app:srcCompat="@drawable/tercer_paso" />
+            <TextView
                 android:id="@+id/textViewDescripcionPaso3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Este es el tercer paso. ¡Casi terminamos! Sigue estas instrucciones para completar la tarea."
+                android:text="Este es el tercer paso: aquí elegirás la imagen en tu galería."
                 android:textSize="16sp"
                 android:textAlignment="center"
                 android:layout_marginBottom="24dp" />
@@ -72,17 +75,38 @@
             <ImageView
                 android:id="@+id/imageViewPaso4"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:scaleType="centerCrop"
+                android:layout_height="450dp"
                 android:layout_marginBottom="8dp"
-                app:srcCompat="@drawable/cuarto_paso" /> <TextView
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/cuarto_paso" />
+            <TextView
                 android:id="@+id/textViewDescripcionPaso4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="¡Felicidades! Has completado el tutorial. Ahora puedes empezar a usar la aplicación con confianza."
+                android:text="¡Felicidades! Has completado el tutorial. Ahora podrás ver el resultado del análisis."
                 android:textSize="16sp"
                 android:textAlignment="center"
                 android:layout_marginBottom="24dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/buttonCerrarTutorial"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Entendido"
+                    android:layout_marginEnd="16dp"/> <Button
+                android:id="@+id/buttonSiguienteTutorial"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Siguiente Tutorial" />
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>
