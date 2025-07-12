@@ -31,288 +31,356 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * MainActivity2 es la actividad encargada de permitir al usuario seleccionar una imagen de la galería,
- * procesarla utilizando la biblioteca OpenCV para detectar esporas, y mostrar los resultados.
+ * **MainActivity2**: La actividad principal que gestiona la interfaz de usuario y el flujo de procesamiento
+ * de imágenes para la detección de esporas. Esta clase integra las funcionalidades de Android para la
+ * selección de imágenes con las capacidades de procesamiento de visión por computadora de OpenCV.
+ * Su objetivo es proporcionar una herramienta robusta para identificar y cuantificar esporas en imágenes.
  */
 public class MainActivity2 extends AppCompatActivity {
 
-    // Vistas de la interfaz de usuario
-    ImageView imageView; // Muestra la imagen procesada con las esporas detectadas
-    TextView textView;   // Muestra el número de esporas detectadas
-    Bitmap imageBitmap;  // Almacena la imagen original seleccionada por el usuario
-    String tipoHongo = ""; // Almacena el tipo de hongo seleccionado en la actividad anterior,
-    // usado para ajustar los parámetros de detección.
+    // --- Componentes de la Interfaz de Usuario (UI) ---
+    private ImageView imageView; // Componente visual para mostrar la imagen (original o procesada).
+    private TextView textView;   // Componente de texto para visualizar el conteo de esporas detectadas.
+    private Bitmap imageBitmap;  // Almacena la imagen original seleccionada por el usuario en formato Bitmap.
+    private String tipoHongo = ""; // String para almacenar el identificador del tipo de hongo,
+    // que se utiliza para cargar un conjunto de parámetros de detección optimizados para ese hongo específico.
 
-    // Etiqueta para los mensajes de log, útil para depuración
+    // Etiqueta para los mensajes de depuración (logs) en Logcat, facilitando el seguimiento del flujo de la aplicación.
     private static final String TAG = "MainActivity2";
 
-    // Bloque estático para cargar la biblioteca OpenCV al inicio de la aplicación
+    // --- Inicialización de la Biblioteca OpenCV ---
+    // Bloque estático que se ejecuta una vez al cargar la clase en memoria.
+    // Es fundamental para inicializar la biblioteca OpenCV de forma nativa antes de que
+    // cualquier método de OpenCV sea invocado. Si la inicialización falla, se registra un error crítico.
     static {
         if (!OpenCVLoader.initDebug()) {
-            Log.e(TAG, "Error al cargar OpenCV");
+            Log.e(TAG, "Error crítico: No se pudo cargar la biblioteca OpenCV.");
         } else {
-            Log.d(TAG, "OpenCV cargado exitosamente");
+            Log.d(TAG, "OpenCV cargado exitosamente. Listo para el procesamiento de imágenes.");
         }
     }
 
     /**
-     * Se llama cuando la actividad es creada por primera vez.
-     * Inicializa las vistas y configura los listeners.
-     * @param savedInstanceState Si la actividad se está recreando, este Bundle contiene
-     * los datos de estado que más recientemente fueron guardados.
+     * Método del ciclo de vida de la actividad: `onCreate`.
+     * Se invoca cuando la actividad es creada por primera vez. Este método es el punto principal
+     * para la inicialización de la UI, la configuración de listeners y la recuperación de datos
+     * persistentes o pasados a través de un `Intent`.
+     *
+     * @param savedInstanceState Si la actividad se está recreando después de ser destruida
+     * (ej. por un cambio de orientación), este Bundle contiene los datos
+     * de estado más recientes guardados por `onSaveInstanceState()`.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Establece el diseño de la interfaz de usuario para esta actividad, usando 'activitymain2'.
+        // Asocia el archivo de diseño XML 'activitymain2.xml' con esta actividad,
+        // definiendo la estructura visual de la interfaz de usuario.
         setContentView(R.layout.activitymain2);
 
-        // Inicializa las vistas conectándolas con sus IDs en el archivo de layout
+        // Enlaza las variables Java con los elementos de la UI definidos en el layout XML
+        // utilizando sus IDs respectivos.
         imageView = findViewById(R.id.imageView);
         textView = findViewById(R.id.texto);
         Button btnAbrirGaleria = findViewById(R.id.btnAbrirGaleria);
 
-        // Recupera el tipo de hongo pasado desde la actividad anterior a través de un Intent
+        // Recupera el `tipoHongo` que se pasó como extra en el `Intent` desde la actividad anterior.
+        // Esta información es crucial para seleccionar el conjunto de parámetros de detección adecuado.
         Intent intent = getIntent();
         tipoHongo = intent.getStringExtra("tipo_espora");
 
-        // Verifica si se recibió un tipo de hongo; si no, establece un valor por defecto
+        // Verifica si se recibió un tipo de hongo válido. Si no, se asigna "default"
+        // para utilizar un conjunto de parámetros genéricos o base.
         if (tipoHongo != null && !tipoHongo.isEmpty()) {
-            Log.d(TAG, "Modo de Hongo recibido: " + tipoHongo);
+            Log.d(TAG, "Parámetro 'tipo_espora' recibido: " + tipoHongo + ". Se ajustarán los parámetros de detección.");
         } else {
-            tipoHongo = "default"; // Si no se especifica, usa parámetros generales
-            Log.d(TAG, "Modo de Hongo: default (no especificado en Intent)");
+            tipoHongo = "default";
+            Log.d(TAG, "Parámetro 'tipo_espora' no especificado. Usando parámetros de detección por defecto.");
         }
 
-        // Configura el listener para el botón "Abrir Galería"
+        // Configura un `OnClickListener` para el botón de "Abrir Galería".
+        // Al hacer clic, se invocará el método `abrirGaleria()` para iniciar el proceso de selección de imagen.
         btnAbrirGaleria.setOnClickListener(v -> {
-            Log.d(TAG, "Botón 'Abrir Galería' presionado");
-            abrirGaleria(); // Llama al método para abrir la galería
+            Log.d(TAG, "Botón 'Abrir Galería' pulsado. Iniciando selección de imagen.");
+            abrirGaleria();
         });
     }
 
     /**
-     * Inicia un Intent para abrir la galería de imágenes del dispositivo
-     * y permitir al usuario seleccionar una imagen.
+     * Inicia un `Intent` implícito para acceder a la galería de imágenes del dispositivo.
+     * Permite al usuario seleccionar una imagen de su almacenamiento externo.
+     * El resultado de esta selección es manejado por el método `onActivityResult()`.
      */
     private void abrirGaleria() {
-        Log.d(TAG, "Abriendo galería de imágenes");
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, 100); // Inicia la actividad esperando un resultado con el código 100
+        // `startActivityForResult` es crucial para lanzar una actividad externa y esperar un resultado.
+        // El `requestCode` (100 en este caso) se utiliza para identificar el origen del resultado
+        // cuando `onActivityResult` es llamado.
+        startActivityForResult(intent, 100);
     }
 
     /**
-     * Maneja el resultado de actividades externas (como la selección de imagen de la galería).
-     * @param requestCode El código de solicitud original que se pasó a startActivityForResult().
-     * @param resultCode El código de resultado devuelto por la actividad secundaria.
-     * @param data Un Intent, que puede regresar datos de resultado a quien lo llama.
+     * Método del ciclo de vida de la actividad: `onActivityResult`.
+     * Este método se invoca automáticamente cuando una actividad lanzada con `startActivityForResult()`
+     * finaliza y devuelve un resultado.
+     *
+     * @param requestCode El código entero que se utilizó en `startActivityForResult()` para identificar la solicitud.
+     * @param resultCode  El código de resultado devuelto por la actividad secundaria (ej. `RESULT_OK` para éxito, `RESULT_CANCELED` para cancelación).
+     * @param data        Un `Intent` que contiene los datos del resultado. Para la selección de imágenes,
+     * contendrá la `Uri` de la imagen seleccionada.
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        // Verifica si el resultado es de la solicitud de la galería, si fue exitoso y si hay datos
+        // Se verifica que el resultado provenga de la solicitud de la galería (`requestCode == 100`),
+        // que la operación haya sido exitosa (`resultCode == RESULT_OK`), y que haya datos disponibles.
         if (requestCode == 100 && resultCode == RESULT_OK && data != null) {
-            Log.d(TAG, "Imagen seleccionada desde la galería. Request Code: " + requestCode + ", Result Code: " + resultCode);
-            Uri imageUri = data.getData(); // Obtiene la URI de la imagen seleccionada
+            Log.d(TAG, "Imagen seleccionada de la galería. Procesando imagen...");
+            Uri imageUri = data.getData(); // Obtiene la URI (Uniform Resource Identifier) de la imagen seleccionada.
             try {
-                // Convierte la URI en un Bitmap y lo pasa para procesamiento
+                // Convierte la `Uri` de la imagen en un objeto `Bitmap`, que es el formato con el que Android trabaja.
                 imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
-                procesarImagen(imageBitmap); // Llama al método para procesar la imagen
+                procesarImagen(imageBitmap); // Invoca la función principal de procesamiento de imágenes con OpenCV.
             } catch (IOException e) {
-                // Registra cualquier error al cargar la imagen
-                Log.e(TAG, "Error al cargar imagen desde URI: " + e.getMessage());
-                e.printStackTrace();
+                // Captura y registra cualquier excepción que ocurra durante la carga del Bitmap,
+                // lo que podría indicar un problema con la URI o el archivo de imagen.
+                Log.e(TAG, "Error al cargar la imagen desde la URI: " + e.getMessage(), e);
             }
         } else {
-            // Registra si la selección de imagen fue cancelada o fallida
-            Log.d(TAG, "Selección de imagen cancelada o fallida. Request Code: " + requestCode + ", Result Code: " + resultCode);
+            Log.d(TAG, "Selección de imagen cancelada o un error ocurrió durante la selección.");
         }
     }
 
     /**
-     * Procesa la imagen de Bitmap utilizando OpenCV para detectar esporas.
-     * Los parámetros de detección se ajustan según el 'tipoHongo' seleccionado.
-     * @param bitmapOriginal El Bitmap de la imagen seleccionada por el usuario.
+     * Función central para el procesamiento de imágenes utilizando OpenCV.
+     * Implementa un pipeline de visión por computadora para detectar esporas, que incluye:
+     * preprocesamiento, umbralización adaptativa, operaciones morfológicas, detección de contornos
+     * y filtrado de contornos basado en propiedades geométricas.
+     *
+     * @param bitmapOriginal El objeto `Bitmap` de la imagen original a procesar.
      */
     private void procesarImagen(Bitmap bitmapOriginal) {
-        Log.d(TAG, "Iniciando procesamiento de imagen...");
+        Log.d(TAG, "Iniciando pipeline de procesamiento de imagen con OpenCV...");
+
+        // 1. Conversión de Bitmap a Mat:
+        // OpenCV utiliza su propio tipo de datos `Mat` (matriz) para representar imágenes.
+        // Esta conversión es el primer paso para aplicar cualquier función de OpenCV.
         Mat matOriginal = new Mat();
-        Utils.bitmapToMat(bitmapOriginal, matOriginal); // Convierte el Bitmap a un objeto Mat de OpenCV
-        Log.d(TAG, "Bitmap convertido a Mat.");
+        Utils.bitmapToMat(bitmapOriginal, matOriginal);
+        Log.d(TAG, "Imagen original convertida a formato Mat.");
 
+        // 2. Redimensionamiento de la Imagen:
+        // Se redimensiona la imagen a un tamaño estándar (640x480). Esto es crucial por varias razones:
+        // a) Consistencia: Asegura que todas las imágenes se procesen con la misma escala, simplificando la calibración de parámetros.
+        // b) Rendimiento: Reduce la cantidad de píxeles, lo que acelera significativamente las operaciones de OpenCV.
+        // c) Memoria: Reduce el consumo de memoria, vital en dispositivos móviles.
         Mat imgProcesar = new Mat();
-        // Redimensiona la imagen para un procesamiento consistente y menos intensivo computacionalmente
         Imgproc.resize(matOriginal, imgProcesar, new Size(640, 480));
-        Log.d(TAG, "Imagen redimensionada a 640x480.");
+        Log.d(TAG, "Imagen redimensionada a 640x480 píxeles para procesamiento uniforme y optimización.");
 
+        // 3. Conversión a Escala de Grises:
+        // Muchas operaciones de procesamiento de imágenes, incluyendo la umbralización y la detección de contornos,
+        // son más eficientes y a menudo requieren imágenes de un solo canal (escala de grises).
         Mat imgGray = new Mat();
-        // Convierte la imagen a escala de grises para simplificar el procesamiento
         Imgproc.cvtColor(imgProcesar, imgGray, Imgproc.COLOR_BGR2GRAY);
-        Log.d(TAG, "Imagen convertida a escala de grises.");
+        Log.d(TAG, "Imagen convertida a escala de grises para simplificar el procesamiento.");
 
+        // 4. Ecualización de Histograma:
+        // Mejora el contraste de la imagen al distribuir uniformemente la intensidad de los píxeles.
+        // Esto hace que las esporas, que pueden tener un contraste bajo, sean más fáciles de detectar.
         Mat imgEqualized = new Mat();
-        // Aplica ecualización de histograma para mejorar el contraste de la imagen
         Imgproc.equalizeHist(imgGray, imgEqualized);
-        Log.d(TAG, "Ecualización de histograma aplicada.");
+        Log.d(TAG, "Ecualización de histograma aplicada para realzar el contraste de las esporas.");
 
-        // Aplica un desenfoque Gaussiano para reducir el ruido y suavizar la imagen.
-        // Se utiliza un kernel de (3, 3) para un suavizado ligero, preservando detalles.
-        Imgproc.GaussianBlur(imgEqualized, imgEqualized, new Size(3, 3), 0);
-        Log.d(TAG, "Desenfoque Gaussiano aplicado con kernel (3, 3).");
+        // 5. Desenfoque Gaussiano:
+        // Aplica un filtro de suavizado para reducir el ruido aleatorio. Con un kernel de (1,1),
+        // el desenfoque es mínimo, preservando al máximo los detalles de las esporas más pequeñas
+        // y de bajo contraste, lo cual es fundamental para el alto recall.
+        Imgproc.GaussianBlur(imgEqualized, imgEqualized, new Size(1, 1), 0);
+        Log.d(TAG, "Desenfoque Gaussiano aplicado con kernel (1,1) para máxima preservación de detalles.");
 
-        // --- INICIO DE AJUSTES DE PARÁMETROS SEGÚN EL TIPO DE HONGO ---
-        // Se establecen valores predeterminados para los parámetros de detección
-        // Ajustes para una umbralización y filtrado de contornos más finos y para abarcar más esporas.
-        int adaptiveBlockSize = 11; // Reducido para umbrales más locales y finos (debe ser impar)
-        double adaptiveC = 2;       // Ajustado para modificar la sensibilidad del umbral
+        // --- Configuración de Parámetros de Detección Optimizada para Recall EXTREMO ---
+        // Estos parámetros han sido ajustados para ser extremadamente permisivos, con el objetivo
+        // de capturar la mayor cantidad ABSOLUTA posible de esporas, priorizando el recall por encima
+        // de la precisión. Es esperable una mayor cantidad de falsos positivos que requerirán
+        // un post-procesamiento o validación.
+        int adaptiveBlockSize = 15; // Tamaño del bloque para la umbralización adaptativa.
+        // Un valor más bajo (`15`) hace el umbral más local y sensible
+        // a variaciones finas, crucial para esporas pequeñas y débiles. **Debe ser impar.**
+        double adaptiveC = 5;       // Constante restada de la media. Un valor bajo (`5`) baja el umbral,
+        // incluyendo más píxeles como parte de objetos y aumentando la detección
+        // de esporas de bajo contraste.
 
-        double minArea = 2.0;       // Área mínima de un contorno (reducido para capturar esporas más pequeñas)
-        double maxArea = 50.0;      // Área máxima de un contorno (reducido para evitar objetos grandes o fusionados)
-        double minCircularity = 0.50; // Circularidad mínima del contorno (1.0 es un círculo perfecto)
-        double minSolidity = 0.80;    // Solidez mínima del contorno (área del contorno / área del casco convexo)
-        int openIterations = 1;     // Número de iteraciones para la operación morfológica de apertura
-        int closeIterations = 1;    // Número de iteraciones para la operación morfológica de cierre
-        int drawContourThickness = 1; // Grosor de la línea con la que se dibujan los contornos detectados (más delgado para precisión visual)
+        double minArea = 1.0;       // Área mínima (en píxeles cuadrados). Establecido en `1.0` para detectar
+        // hasta los puntos más pequeños que puedan ser esporas.
+        double maxArea = 100.0;     // Área máxima. Aumentado a `100.0` para ser muy tolerante con esporas
+        // grandes o agrupaciones, asegurando que nada se descarte por tamaño.
+        double minCircularity = 0.40; // Circularidad mínima. Relajado al extremo (`0.40`) para aceptar
+        // esporas muy deformadas, elípticas, o con contornos irregulares por ruido.
+        double minSolidity = 0.60;    // Solidez mínima. Relajado a `0.60` para incluir objetos con concavidades
+        // o formas menos compactas, maximizando la detección.
+        int openIterations = 0;     // Iteraciones de Apertura. Establecido a `0` para no eliminar ruido
+        // ni erosionar esporas pequeñas. (0 significa ninguna operación)
+        int closeIterations = 0;    // Iteraciones de Cierre. Establecido a `0` para no fusionar esporas
+        // cercanas ni alterar sus formas. (0 significa ninguna operación)
+        int drawContourThickness = 1; // Grosor del contorno a dibujar.
 
-        // Parámetro: relación de aspecto máxima permitida para un contorno.
-        // Ayuda a filtrar objetos alargados que no son esporas.
-        double maxAspectRatio = 3.0;
+        // Parámetros de relación de aspecto. Rango muy amplio para capturar cualquier forma imaginable.
+        double minAspectRatio = 0.3; // Rango extremadamente amplio para incluir esporas muy alargadas
+        double maxAspectRatio = 3.0; // en cualquier dirección, o formas altamente irregulares.
 
-        // Ajusta los parámetros de detección específicos para cada tipo de hongo.
-        // Estos valores han sido optimizados para cada caso particular.
+        // Lógica para ajustar los parámetros específicos para cada `tipoHongo`.
+        // Estos ajustes también se han relajado al máximo para favorecer el recall.
         switch (tipoHongo) {
             case "Hongo 1":
-                adaptiveBlockSize = 11;
-                adaptiveC = 3;
-                minArea = 5.0;
+                adaptiveBlockSize = 13;
+                adaptiveC = 4;
+                minArea = 2.0;
                 maxArea = 80.0;
-                minCircularity = 0.55;
-                minSolidity = 0.50;
-                openIterations = 2;
-                closeIterations = 3;
+                minCircularity = 0.35;
+                minSolidity = 0.55;
+                openIterations = 0;
+                closeIterations = 0;
                 drawContourThickness = 2;
+                minAspectRatio = 0.4;
                 maxAspectRatio = 2.5;
                 break;
             case "Hongo 2":
-                adaptiveBlockSize = 15; // Podría ser útil un bloque ligeramente más grande si las esporas son más grandes.
-                adaptiveC = 4;
-                minArea = 7.0;
-                maxArea = 70.0;
-                minCircularity = 0.20;
+                adaptiveBlockSize = 17;
+                adaptiveC = 6;
+                minArea = 3.0;
+                maxArea = 90.0;
+                minCircularity = 0.30;
                 minSolidity = 0.50;
-                openIterations = 2;
-                closeIterations = 3;
+                openIterations = 0;
+                closeIterations = 0;
                 drawContourThickness = 1;
-                maxAspectRatio = 4.0;
+                minAspectRatio = 0.35;
+                maxAspectRatio = 2.8;
                 break;
             case "Hongo 3":
-                adaptiveBlockSize = 13;
-                adaptiveC = 7;
-                minArea = 7.0;
-                maxArea = 70.0;
-                minCircularity = 0.40;
-                minSolidity = 0.85;
-                openIterations = 2;
-                closeIterations = 2;
+                adaptiveBlockSize = 15;
+                adaptiveC = 5;
+                minArea = 2.5;
+                maxArea = 85.0;
+                minCircularity = 0.38;
+                minSolidity = 0.58;
+                openIterations = 0;
+                closeIterations = 0;
                 drawContourThickness = 2;
-                maxAspectRatio = 3.0;
+                minAspectRatio = 0.45;
+                maxAspectRatio = 2.6;
                 break;
             case "Hongo 4":
-                adaptiveBlockSize = 13;
-                adaptiveC = 9;
-                minArea = 5.0;
-                maxArea = 80.0;
-                minCircularity = 0.53;
-                minSolidity = 0.40;
-                openIterations = 2;
-                closeIterations = 1;
+                adaptiveBlockSize = 15;
+                adaptiveC = 7;
+                minArea = 1.5;
+                maxArea = 95.0;
+                minCircularity = 0.32;
+                minSolidity = 0.52;
+                openIterations = 0;
+                closeIterations = 0;
                 drawContourThickness = 1;
-                maxAspectRatio = 3.5;
+                minAspectRatio = 0.3;
+                maxAspectRatio = 2.9;
                 break;
             default:
-                // Si el tipo de hongo no es reconocido o es "default", se usan los valores predeterminados.
+                // Se mantienen los valores por defecto optimizados para un alto recall extremo.
                 break;
         }
 
-        // Asegura que el tamaño del bloque adaptativo sea impar y al menos 3.
+        // Validación: `adaptiveBlockSize` debe ser impar y al menos 3. Se ajusta si no cumple.
+        // Esto es importante ya que los valores bajos pueden caer en rangos no válidos para OpenCV.
         if (adaptiveBlockSize % 2 == 0) adaptiveBlockSize++;
-        if (adaptiveBlockSize < 3) adaptiveBlockSize = 3; // Mínimo tamaño para el kernel de OpenCV
-        Log.d(TAG, "Parámetros finales de detección: BlockSize=" + adaptiveBlockSize + ", C=" + adaptiveC +
+        if (adaptiveBlockSize < 3) adaptiveBlockSize = 3;
+
+        Log.d(TAG, "Parámetros finales de detección aplicados (optimizados para recall EXTREMO):" +
+                " BlockSize=" + adaptiveBlockSize + ", C=" + adaptiveC +
                 ", MinArea=" + minArea + ", MaxArea=" + maxArea +
                 ", MinCirc=" + minCircularity + ", MinSolidity=" + minSolidity +
                 ", OpenIters=" + openIterations + ", CloseIters=" + closeIterations +
                 ", ContourThickness=" + drawContourThickness +
-                ", MaxAspectRatio=" + maxAspectRatio);
-        // --- FIN DE AJUSTES DE PARÁMETROS SEGÚN EL TIPO DE HONGO ---
+                ", MinAspectRatio=" + minAspectRatio + ", MaxAspectRatio=" + maxAspectRatio);
+        // --- FIN DE AJUSTES DE PARÁMETROS ---
 
+        // 6. Umbralización Adaptativa:
+        // Convierte la imagen en escala de grises en una imagen binaria (blanco y negro).
+        // `ADAPTIVE_THRESH_GAUSSIAN_C` calcula un umbral diferente para cada región de la imagen.
+        // Con los parámetros `adaptiveBlockSize` y `adaptiveC` muy bajos, la umbralización
+        // será muy sensible y tenderá a clasificar más píxeles como "objeto", lo que es clave
+        // para un recall extremo, aunque puede generar más ruido.
         Mat binaryMask = new Mat();
-        // Aplica umbralización adaptativa para crear una máscara binaria.
-        // ADAPTIVE_THRESH_GAUSSIAN_C calcula el umbral como la media ponderada Gaussiana de los vecinos.
-        // THRESH_BINARY_INV invierte la imagen (objetos blancos sobre fondo negro).
         Imgproc.adaptiveThreshold(
-                imgEqualized,
-                binaryMask,
-                255,
-                Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-                Imgproc.THRESH_BINARY_INV,
-                adaptiveBlockSize,
-                adaptiveC
+                imgEqualized,               // Imagen de entrada (escala de grises y ecualizada).
+                binaryMask,                 // Imagen binaria de salida.
+                255,                        // Valor máximo asignado a los píxeles que superan el umbral.
+                Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, // Método de umbralización adaptativa.
+                Imgproc.THRESH_BINARY_INV,          // Tipo de umbralización: binario invertido.
+                adaptiveBlockSize,          // Tamaño de la vecindad para calcular el umbral.
+                adaptiveC                   // Constante a restar, ajusta la sensibilidad del umbral.
         );
-        Log.d(TAG, "Umbralización adaptativa aplicada.");
+        Log.d(TAG, "Umbralización adaptativa completada con alta sensibilidad.");
 
-        // Define un kernel elíptico para las operaciones morfológicas.
-        // La operación de APERTURA (MORPH_OPEN) erosiona y luego dilata, eliminando pequeños objetos de ruido.
-        // Se utiliza un kernel pequeño (3x3) para una limpieza muy suave, preservando formas finas.
-        Mat kernelOpen = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
-        Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_OPEN, kernelOpen, new Point(-1, -1), openIterations);
-        Log.d(TAG, "Operación de apertura (MORPH_OPEN) aplicada con kernel (3,3) y " + openIterations + " iteraciones.");
+        // 7. Operaciones Morfológicas: Apertura y Cierre.
+        // Estas operaciones se han minimizado o eliminado para evitar la pérdida de esporas
+        // pequeñas o delicadas. Su propósito aquí es muy limitado para no afectar el recall.
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
 
-        // La operación de CIERRE (MORPH_CLOSE) dilata y luego erosiona, cerrando pequeños agujeros
-        // dentro de los objetos y conectando componentes cercanos.
-        // Se utiliza un kernel pequeño (3x3) para un cierre suave, evitando la fusión de esporas.
-        Mat kernelClose = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
-        Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_CLOSE, kernelClose, new Point(-1, -1), closeIterations);
-        Log.d(TAG, "Operación de cierre (MORPH_CLOSE) aplicada con kernel (3,3) y " + closeIterations + " iteraciones.");
+        // a. Operación de Apertura (MORPH_OPEN):
+        // Con `openIterations = 0`, no se realiza ninguna operación de apertura, preservando
+        // todos los pequeños detalles y ruido.
+        Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_OPEN, kernel, new Point(-1, -1), openIterations);
+        Log.d(TAG, "Operación de apertura (MORPH_OPEN) aplicada con " + openIterations + " iteración(es).");
 
+        // b. Operación de Cierre (MORPH_CLOSE):
+        // Con `closeIterations = 0`, no se realiza ninguna operación de cierre, evitando
+        // la fusión accidental de esporas cercanas.
+        Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_CLOSE, kernel, new Point(-1, -1), closeIterations);
+        Log.d(TAG, "Operación de cierre (MORPH_CLOSE) aplicada con " + closeIterations + " iteración(es).");
+
+        // 8. Detección de Contornos:
+        // Detecta los contornos de todos los objetos "blancos" en la máscara binaria resultante,
+        // sin filtrar inicialmente, ya que los filtros se aplican después.
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
-        // Encuentra los contornos de los objetos en la máscara binaria.
-        // RETR_EXTERNAL recupera solo los contornos externos (evita contornos de agujeros internos).
-        // CHAIN_APPROX_SIMPLE comprime los segmentos horizontales, verticales y diagonales.
-        Imgproc.findContours(binaryMask.clone(), contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-        Log.d(TAG, "Contornos encontrados. Número inicial de contornos: " + contours.size());
+        Imgproc.findContours(
+                binaryMask.clone(),
+                contours,
+                hierarchy,
+                Imgproc.RETR_LIST,     // Usamos RETR_LIST para recuperar todos los contornos, sin jerarquía.
+                // Esto es menos restrictivo y asegura que se obtengan todos.
+                Imgproc.CHAIN_APPROX_NONE // Usamos CHAIN_APPROX_NONE para obtener TODOS los puntos de contorno,
+                // sin aproximación, lo que es útil si la forma de la espora es muy irregular.
+        );
+        Log.d(TAG, "Detección de contornos completada. Número inicial de contornos: " + contours.size());
 
-        Mat imgResult = imgProcesar.clone(); // Crea una copia de la imagen redimensionada para dibujar los resultados.
+        Mat imgResult = imgProcesar.clone();
+        int conteoEsporas = 0;
 
-        int conteoEsporas = 0; // Contador de esporas detectadas
-
-        // Itera sobre cada contorno encontrado para filtrarlos y contarlos.
+        // 9. Filtrado de Contornos EXTREMADAMENTE Relajado:
+        // Los filtros se aplican con umbrales mínimos para descartar solo lo más obviamente
+        // irrelevante, priorizando la inclusión de cualquier posible espora.
         for (MatOfPoint contour : contours) {
-            double area = Imgproc.contourArea(contour); // Calcula el área del contorno.
+            double area = Imgproc.contourArea(contour);
 
-            // Filtra contornos por área mínima y máxima para descartar ruido muy pequeño o objetos muy grandes.
+            // Filtro de Área: Rango muy amplio para capturar cualquier cosa que se parezca remotamente a una espora.
             if (area < minArea || area > maxArea) {
-                if (contour != null) contour.release(); // Libera la memoria del contorno si no se usa.
-                continue; // Pasa al siguiente contorno
+                if (contour != null) contour.release();
+                continue;
             }
 
-            // Calcula el perímetro del contorno para determinar su circularidad.
+            // Filtro de Circularidad:
             double perimeter = Imgproc.arcLength(new MatOfPoint2f(contour.toArray()), true);
-            // La circularidad se calcula como (4 * PI * área) / (perímetro * perímetro).
-            // Un valor cercano a 1.0 indica una forma más circular.
             double circularity = (perimeter == 0) ? 0 : (4 * Math.PI * area / (perimeter * perimeter));
 
-            // Filtra contornos por circularidad mínima.
+            // Umbral de circularidad muy bajo para aceptar formas irregulares o elípticas.
             if (circularity < minCircularity) {
                 if (contour != null) contour.release();
                 continue;
             }
 
-            // Calcula el casco convexo (convex hull) del contorno.
+            // Filtro de Solidez (Solidity):
             MatOfInt hull = new MatOfInt();
             Imgproc.convexHull(contour, hull);
-
-            // Convierte los índices del casco convexo en un contorno de puntos.
             MatOfPoint hullContour = new MatOfPoint();
             List<Point> hullPointsList = new ArrayList<>();
             List<Point> contourPoints = contour.toList();
@@ -320,78 +388,64 @@ public class MainActivity2 extends AppCompatActivity {
                 hullPointsList.add(contourPoints.get((int)hull.get(i, 0)[0]));
             }
             hullContour.fromList(hullPointsList);
-            double hullArea = Imgproc.contourArea(hullContour); // Área del casco convexo.
-
-            // Calcula la solidez (solidity): área del contorno / área del casco convexo.
-            // La solidez indica qué tan "sólido" o convexo es el objeto, sin grandes hendiduras.
-            // Un valor cercano a 1.0 indica una forma compacta.
+            double hullArea = Imgproc.contourArea(hullContour);
             double solidity = (hullArea == 0) ? 0 : (area / hullArea);
 
-            // Filtra contornos por solidez mínima.
+            // Umbral de solidez muy bajo para permitir contornos con concavidades o irregularidades.
             if (solidity < minSolidity) {
-                // Libera recursos si el contorno no pasa el filtro.
                 if (hull != null) hull.release();
                 if (hullContour != null) hullContour.release();
                 if (contour != null) contour.release();
                 continue;
             }
 
-            // --- Filtro de Relación de Aspecto (Aspect Ratio) ---
-            // Obtiene el cuadro delimitador rectangular del contorno.
+            // Filtro de Relación de Aspecto (Aspect Ratio):
             Rect boundingRect = Imgproc.boundingRect(contour);
-            // Calcula la relación de aspecto: ancho / alto del cuadro delimitador.
             double aspectRatio = (double) boundingRect.width / boundingRect.height;
 
-            // Filtra contornos con una relación de aspecto que no se ajuste a la de una espora.
-            // Esto elimina objetos muy alargados o muy planos que suelen ser ruido.
-            // Se verifica si el aspectRatio está fuera del rango [1/maxAspectRatio, maxAspectRatio].
-            if (aspectRatio < (1.0 / maxAspectRatio) || aspectRatio > maxAspectRatio) {
-                Log.d(TAG, "Contorno descartado por Aspect Ratio: " + aspectRatio + ". Area: " + area);
-                // Libera recursos si el contorno no pasa el filtro.
+            // Rango extremadamente amplio para no descartar nada por su forma alargada.
+            if (aspectRatio < minAspectRatio || aspectRatio > maxAspectRatio) {
+                Log.d(TAG, "Contorno descartado por Relación de Aspecto: " + String.format("%.2f", aspectRatio) +
+                        ". Área: " + String.format("%.2f", area) + " píxeles cuadrados. Circularidad: " + String.format("%.2f", circularity));
                 if (hull != null) hull.release();
                 if (hullContour != null) hullContour.release();
                 if (contour != null) contour.release();
                 continue;
             }
-            // --- Fin del filtro de Relación de Aspecto ---
+            // --- Fin del Filtrado de Contornos ---
 
-            // Si el contorno pasa todos los filtros, se considera una espora.
-            // Dibuja el contorno detectado en la imagen de resultados con un color verde.
+            // Si el contorno ha pasado todos los filtros extremadamente relajados, se considera una espora válida.
             Imgproc.drawContours(imgResult, List.of(contour), -1, new Scalar(0, 255, 0), drawContourThickness);
-            conteoEsporas++; // Incrementa el contador de esporas.
+            conteoEsporas++;
 
-            // Libera la memoria de los objetos MatOfInt y MatOfPoint usados en esta iteración.
             if (hull != null) hull.release();
             if (hullContour != null) hullContour.release();
             if (contour != null) contour.release();
         }
-        Log.d(TAG, "Filtrado de contornos completado. Esporas detectadas: " + conteoEsporas);
+        Log.d(TAG, "Filtrado de contornos completado. Esporas válidas detectadas: " + conteoEsporas);
+
+        // 10. Actualización de la Interfaz de Usuario (UI):
         String displayText = "Número total de esporas detectadas: " + conteoEsporas;
 
-        // Convierte la imagen Mat de resultados de nuevo a Bitmap para mostrarla en el ImageView.
         Bitmap imgFinal = Bitmap.createBitmap(imgResult.cols(), imgResult.rows(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(imgResult, imgFinal);
 
-        // Muestra la imagen procesada y el conteo de esporas en la interfaz de usuario.
         imageView.setImageBitmap(imgFinal);
         textView.setText(displayText);
-        Log.d(TAG, "Procesamiento de imagen finalizado y resultados mostrados.");
+        Log.d(TAG, "Procesamiento de imagen finalizado y resultados actualizados en la UI.");
 
-        // Es crucial liberar la memoria de todos los objetos Mat de OpenCV al finalizar su uso
-        // para evitar fugas de memoria, ya que OpenCV usa memoria nativa.
+        // --- Liberación de Recursos de Memoria de OpenCV ---
         matOriginal.release();
         imgProcesar.release();
         imgGray.release();
         imgEqualized.release();
         binaryMask.release();
-        kernelOpen.release();
-        kernelClose.release();
+        kernel.release();
         hierarchy.release();
         imgResult.release();
-        // Asegúrate de liberar también los contornos si no fueron liberados individualmente
-        // (aunque en este caso se liberan dentro del bucle si se descartan, es una buena práctica asegurar).
         for (MatOfPoint c : contours) {
             c.release();
         }
+        Log.d(TAG, "Todos los recursos de OpenCV (Mat objects) han sido liberados para prevenir fugas de memoria.");
     }
 }
