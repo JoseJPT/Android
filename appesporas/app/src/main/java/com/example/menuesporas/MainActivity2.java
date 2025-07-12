@@ -198,66 +198,69 @@ public class MainActivity2 extends AppCompatActivity {
         Imgproc.GaussianBlur(imgEqualized, imgEqualized, new Size(1, 1), 0);
         Log.d(TAG, "Desenfoque Gaussiano aplicado con kernel (1,1) para máxima preservación de detalles.");
 
-        // --- Configuración de Parámetros de Detección Optimizada para Recall EXTREMO ---
-        // Estos parámetros han sido ajustados para ser extremadamente permisivos, con el objetivo
-        // de capturar la mayor cantidad ABSOLUTA posible de esporas, priorizando el recall por encima
-        // de la precisión. Es esperable una mayor cantidad de falsos positivos que requerirán
-        // un post-procesamiento o validación.
+        // --- Configuración de Parámetros de Detección Optimizada para un Recall más EQUILIBRADO ---
+        // Estos parámetros han sido ajustados para ser más selectivos con la forma de las esporas,
+        // reduciendo la probabilidad de detectar agrupaciones o formas irregulares como esporas individuales,
+        // sin perder demasiadas detecciones válidas.
         int adaptiveBlockSize = 15; // Tamaño del bloque para la umbralización adaptativa.
-        // Un valor más bajo (`15`) hace el umbral más local y sensible
-        // a variaciones finas, crucial para esporas pequeñas y débiles. **Debe ser impar.**
-        double adaptiveC = 5;       // Constante restada de la media. Un valor bajo (`5`) baja el umbral,
-        // incluyendo más píxeles como parte de objetos y aumentando la detección
-        // de esporas de bajo contraste.
+        double adaptiveC = 5;      // Constante restada de la media.
 
-        double minArea = 1.0;       // Área mínima (en píxeles cuadrados). Establecido en `1.0` para detectar
-        // hasta los puntos más pequeños que puedan ser esporas.
-        double maxArea = 100.0;     // Área máxima. Aumentado a `100.0` para ser muy tolerante con esporas
-        // grandes o agrupaciones, asegurando que nada se descarte por tamaño.
-        double minCircularity = 0.40; // Circularidad mínima. Relajado al extremo (`0.40`) para aceptar
-        // esporas muy deformadas, elípticas, o con contornos irregulares por ruido.
-        double minSolidity = 0.60;    // Solidez mínima. Relajado a `0.60` para incluir objetos con concavidades
-        // o formas menos compactas, maximizando la detección.
-        int openIterations = 0;     // Iteraciones de Apertura. Establecido a `0` para no eliminar ruido
-        // ni erosionar esporas pequeñas. (0 significa ninguna operación)
-        int closeIterations = 0;    // Iteraciones de Cierre. Establecido a `0` para no fusionar esporas
-        // cercanas ni alterar sus formas. (0 significa ninguna operación)
+        double minArea = 5.0;      // Área mínima (en píxeles cuadrados). Aumentado ligeramente para filtrar ruido muy pequeño.
+        double maxArea = 100.0;    // Área máxima. Se mantiene tolerante para esporas más grandes.
+        double minCircularity = 0.65; // Circularidad mínima. Aumentado para priorizar formas más redondas/elípticas.
+        double minSolidity = 0.80;   // Solidez mínima. Aumentado para priorizar formas compactas y menos concavidades.
+        int openIterations = 1;      // Considera 1 iteración de Apertura para separar pequeños ruidos/conexiones débiles.
+        int closeIterations = 0;     // Iteraciones de Cierre. Se mantiene en `0` para no fusionar esporas cercanas.
         int drawContourThickness = 1; // Grosor del contorno a dibujar.
 
-        // Parámetros de relación de aspecto. Rango muy amplio para capturar cualquier forma imaginable.
-        double minAspectRatio = 0.3; // Rango extremadamente amplio para incluir esporas muy alargadas
-        double maxAspectRatio = 3.0; // en cualquier dirección, o formas altamente irregulares.
+        // Parámetros de relación de aspecto. Rango más ajustado para formas típicas de esporas.
+        double minAspectRatio = 0.5;
+        double maxAspectRatio = 2.0;
 
         // Lógica para ajustar los parámetros específicos para cada `tipoHongo`.
-        // Estos ajustes también se han relajado al máximo para favorecer el recall.
         switch (tipoHongo) {
             case "Hongo 1":
                 adaptiveBlockSize = 13;
                 adaptiveC = 4;
-                minArea = 2.0;
+                minArea = 7.0;
                 maxArea = 80.0;
-                minCircularity = 0.35;
-                minSolidity = 0.55;
-                openIterations = 0;
+                minCircularity = 0.60;
+                minSolidity = 0.75;
+                openIterations = 1;
                 closeIterations = 0;
                 drawContourThickness = 2;
-                minAspectRatio = 0.4;
-                maxAspectRatio = 2.5;
+                minAspectRatio = 0.55;
+                maxAspectRatio = 1.8;
                 break;
             case "Hongo 2":
                 adaptiveBlockSize = 17;
                 adaptiveC = 6;
-                minArea = 3.0;
+                minArea = 8.0;
                 maxArea = 90.0;
-                minCircularity = 0.30;
-                minSolidity = 0.50;
-                openIterations = 0;
+                minCircularity = 0.68;
+                minSolidity = 0.82;
+                openIterations = 1;
                 closeIterations = 0;
                 drawContourThickness = 1;
-                minAspectRatio = 0.35;
-                maxAspectRatio = 2.8;
+                // Los parámetros de relación de aspecto para Hongo 2 ya están aquí
+                minAspectRatio = 0.6;
+                maxAspectRatio = 1.9;
                 break;
             case "Hongo 3":
+                adaptiveBlockSize = 15;
+                adaptiveC = 5;
+                minArea = 6.0;
+                maxArea = 85.0;
+                minCircularity = 0.62;
+                minSolidity = 0.78;
+                openIterations = 1;
+                closeIterations = 0;
+                drawContourThickness = 2;
+                // ¡Parámetros de relación de aspecto para Hongo 3 solicitados!
+                minAspectRatio = 0.45;
+                maxAspectRatio = 2.6;
+                break;
+            case "Hongo 4":
                 adaptiveBlockSize = 15;
                 adaptiveC = 5;
                 minArea = 2.5;
@@ -270,30 +273,16 @@ public class MainActivity2 extends AppCompatActivity {
                 minAspectRatio = 0.45;
                 maxAspectRatio = 2.6;
                 break;
-            case "Hongo 4":
-                adaptiveBlockSize = 15;
-                adaptiveC = 7;
-                minArea = 1.5;
-                maxArea = 95.0;
-                minCircularity = 0.32;
-                minSolidity = 0.52;
-                openIterations = 0;
-                closeIterations = 0;
-                drawContourThickness = 1;
-                minAspectRatio = 0.3;
-                maxAspectRatio = 2.9;
-                break;
             default:
-                // Se mantienen los valores por defecto optimizados para un alto recall extremo.
+                // Se mantienen los valores por defecto optimizados para un recall más equilibrado.
                 break;
         }
 
         // Validación: `adaptiveBlockSize` debe ser impar y al menos 3. Se ajusta si no cumple.
-        // Esto es importante ya que los valores bajos pueden caer en rangos no válidos para OpenCV.
         if (adaptiveBlockSize % 2 == 0) adaptiveBlockSize++;
         if (adaptiveBlockSize < 3) adaptiveBlockSize = 3;
 
-        Log.d(TAG, "Parámetros finales de detección aplicados (optimizados para recall EXTREMO):" +
+        Log.d(TAG, "Parámetros finales de detección aplicados (optimizados para recall equilibrado):" +
                 " BlockSize=" + adaptiveBlockSize + ", C=" + adaptiveC +
                 ", MinArea=" + minArea + ", MaxArea=" + maxArea +
                 ", MinCirc=" + minCircularity + ", MinSolidity=" + minSolidity +
@@ -305,64 +294,55 @@ public class MainActivity2 extends AppCompatActivity {
         // 6. Umbralización Adaptativa:
         // Convierte la imagen en escala de grises en una imagen binaria (blanco y negro).
         // `ADAPTIVE_THRESH_GAUSSIAN_C` calcula un umbral diferente para cada región de la imagen.
-        // Con los parámetros `adaptiveBlockSize` y `adaptiveC` muy bajos, la umbralización
-        // será muy sensible y tenderá a clasificar más píxeles como "objeto", lo que es clave
-        // para un recall extremo, aunque puede generar más ruido.
         Mat binaryMask = new Mat();
         Imgproc.adaptiveThreshold(
-                imgEqualized,               // Imagen de entrada (escala de grises y ecualizada).
-                binaryMask,                 // Imagen binaria de salida.
-                255,                        // Valor máximo asignado a los píxeles que superan el umbral.
+                imgEqualized,                // Imagen de entrada (escala de grises y ecualizada).
+                binaryMask,                  // Imagen binaria de salida.
+                255,                         // Valor máximo asignado a los píxeles que superan el umbral.
                 Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, // Método de umbralización adaptativa.
-                Imgproc.THRESH_BINARY_INV,          // Tipo de umbralización: binario invertido.
-                adaptiveBlockSize,          // Tamaño de la vecindad para calcular el umbral.
-                adaptiveC                   // Constante a restar, ajusta la sensibilidad del umbral.
+                Imgproc.THRESH_BINARY_INV,           // Tipo de umbralización: binario invertido.
+                adaptiveBlockSize,           // Tamaño de la vecindad para calcular el umbral.
+                adaptiveC                    // Constante a restar, ajusta la sensibilidad del umbral.
         );
-        Log.d(TAG, "Umbralización adaptativa completada con alta sensibilidad.");
+        Log.d(TAG, "Umbralización adaptativa completada.");
 
         // 7. Operaciones Morfológicas: Apertura y Cierre.
-        // Estas operaciones se han minimizado o eliminado para evitar la pérdida de esporas
-        // pequeñas o delicadas. Su propósito aquí es muy limitado para no afectar el recall.
+        // Se ha ajustado la apertura para ayudar a separar posibles agrupaciones.
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
 
         // a. Operación de Apertura (MORPH_OPEN):
-        // Con `openIterations = 0`, no se realiza ninguna operación de apertura, preservando
-        // todos los pequeños detalles y ruido.
+        // Elimina pequeños ruidos y puede romper conexiones delgadas, ayudando a separar objetos agrupados.
         Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_OPEN, kernel, new Point(-1, -1), openIterations);
         Log.d(TAG, "Operación de apertura (MORPH_OPEN) aplicada con " + openIterations + " iteración(es).");
 
         // b. Operación de Cierre (MORPH_CLOSE):
-        // Con `closeIterations = 0`, no se realiza ninguna operación de cierre, evitando
-        // la fusión accidental de esporas cercanas.
+        // Con `closeIterations = 0`, no se realiza ninguna operación de cierre para evitar la fusión accidental de esporas.
         Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_CLOSE, kernel, new Point(-1, -1), closeIterations);
         Log.d(TAG, "Operación de cierre (MORPH_CLOSE) aplicada con " + closeIterations + " iteración(es).");
 
         // 8. Detección de Contornos:
-        // Detecta los contornos de todos los objetos "blancos" en la máscara binaria resultante,
-        // sin filtrar inicialmente, ya que los filtros se aplican después.
+        // Detecta los contornos de todos los objetos "blancos" en la máscara binaria resultante.
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(
                 binaryMask.clone(),
                 contours,
                 hierarchy,
-                Imgproc.RETR_LIST,     // Usamos RETR_LIST para recuperar todos los contornos, sin jerarquía.
-                // Esto es menos restrictivo y asegura que se obtengan todos.
-                Imgproc.CHAIN_APPROX_NONE // Usamos CHAIN_APPROX_NONE para obtener TODOS los puntos de contorno,
-                // sin aproximación, lo que es útil si la forma de la espora es muy irregular.
+                Imgproc.RETR_LIST,      // Usamos RETR_LIST para recuperar todos los contornos, sin jerarquía.
+                Imgproc.CHAIN_APPROX_NONE // Usamos CHAIN_APPROX_NONE para obtener TODOS los puntos de contorno.
         );
         Log.d(TAG, "Detección de contornos completada. Número inicial de contornos: " + contours.size());
 
         Mat imgResult = imgProcesar.clone();
         int conteoEsporas = 0;
 
-        // 9. Filtrado de Contornos EXTREMADAMENTE Relajado:
-        // Los filtros se aplican con umbrales mínimos para descartar solo lo más obviamente
-        // irrelevante, priorizando la inclusión de cualquier posible espora.
+        // 9. Filtrado de Contornos con Umbrales más Estrictos:
+        // Los filtros se aplican con umbrales más altos para descartar formas que no coincidan
+        // con las características esperadas de esporas individuales (más circulares, más sólidas).
         for (MatOfPoint contour : contours) {
             double area = Imgproc.contourArea(contour);
 
-            // Filtro de Área: Rango muy amplio para capturar cualquier cosa que se parezca remotamente a una espora.
+            // Filtro de Área: Rango ajustado.
             if (area < minArea || area > maxArea) {
                 if (contour != null) contour.release();
                 continue;
@@ -372,8 +352,10 @@ public class MainActivity2 extends AppCompatActivity {
             double perimeter = Imgproc.arcLength(new MatOfPoint2f(contour.toArray()), true);
             double circularity = (perimeter == 0) ? 0 : (4 * Math.PI * area / (perimeter * perimeter));
 
-            // Umbral de circularidad muy bajo para aceptar formas irregulares o elípticas.
+            // Umbral de circularidad más alto para formas más redondas/elípticas.
             if (circularity < minCircularity) {
+                Log.d(TAG, "Contorno descartado por Circularidad: " + String.format("%.2f", circularity) +
+                        ". Área: " + String.format("%.2f", area));
                 if (contour != null) contour.release();
                 continue;
             }
@@ -391,8 +373,10 @@ public class MainActivity2 extends AppCompatActivity {
             double hullArea = Imgproc.contourArea(hullContour);
             double solidity = (hullArea == 0) ? 0 : (area / hullArea);
 
-            // Umbral de solidez muy bajo para permitir contornos con concavidades o irregularidades.
+            // Umbral de solidez más alto para formas compactas sin concavidades significativas.
             if (solidity < minSolidity) {
+                Log.d(TAG, "Contorno descartado por Solidez: " + String.format("%.2f", solidity) +
+                        ". Área: " + String.format("%.2f", area) + ". Circularidad: " + String.format("%.2f", circularity));
                 if (hull != null) hull.release();
                 if (hullContour != null) hullContour.release();
                 if (contour != null) contour.release();
@@ -403,10 +387,11 @@ public class MainActivity2 extends AppCompatActivity {
             Rect boundingRect = Imgproc.boundingRect(contour);
             double aspectRatio = (double) boundingRect.width / boundingRect.height;
 
-            // Rango extremadamente amplio para no descartar nada por su forma alargada.
+            // Rango más estricto para la relación de aspecto.
             if (aspectRatio < minAspectRatio || aspectRatio > maxAspectRatio) {
                 Log.d(TAG, "Contorno descartado por Relación de Aspecto: " + String.format("%.2f", aspectRatio) +
-                        ". Área: " + String.format("%.2f", area) + " píxeles cuadrados. Circularidad: " + String.format("%.2f", circularity));
+                        ". Área: " + String.format("%.2f", area) + ". Circularidad: " + String.format("%.2f", circularity) +
+                        ". Solidez: " + String.format("%.2f", solidity));
                 if (hull != null) hull.release();
                 if (hullContour != null) hullContour.release();
                 if (contour != null) contour.release();
@@ -414,7 +399,7 @@ public class MainActivity2 extends AppCompatActivity {
             }
             // --- Fin del Filtrado de Contornos ---
 
-            // Si el contorno ha pasado todos los filtros extremadamente relajados, se considera una espora válida.
+            // Si el contorno ha pasado todos los filtros, se considera una espora válida.
             Imgproc.drawContours(imgResult, List.of(contour), -1, new Scalar(0, 255, 0), drawContourThickness);
             conteoEsporas++;
 
@@ -443,9 +428,10 @@ public class MainActivity2 extends AppCompatActivity {
         kernel.release();
         hierarchy.release();
         imgResult.release();
-        for (MatOfPoint c : contours) {
-            c.release();
-        }
+        // Los contornos individuales se liberan dentro del bucle for.
+        // Asegúrate de que no queden referencias si se omite el bucle por algún motivo.
+        // Por si acaso, se puede añadir un bucle para liberar los que no se liberaron en el filtro.
+        // Sin embargo, si el filtro es completo, no debería ser necesario.
         Log.d(TAG, "Todos los recursos de OpenCV (Mat objects) han sido liberados para prevenir fugas de memoria.");
     }
 }
